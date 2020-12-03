@@ -54,6 +54,8 @@
 #include "lib/parse_conf.h"
 #include "lib/util.h"
 
+#include <map>
+
 namespace directordaemon {
 
 /* Imported subroutines */
@@ -139,6 +141,7 @@ static bool ReleaseCmd(UaContext* ua, const char* cmd);
 static bool ReloadCmd(UaContext* ua, const char* cmd);
 static bool ResolveCmd(UaContext* ua, const char* cmd);
 static bool SetdebugCmd(UaContext* ua, const char* cmd);
+static bool SetdeviceCmd(UaContext* ua, const char* cmd);
 static bool SetbwlimitCmd(UaContext* ua, const char* cmd);
 static bool SetipCmd(UaContext* ua, const char* cmd);
 static bool time_cmd(UaContext* ua, const char* cmd);
@@ -484,6 +487,9 @@ static struct ua_cmdstruct commands[] = {
     {NT_("setdebug"), SetdebugCmd, _("Sets debug level"),
      NT_("level=<nn> trace=0/1 timestamp=0/1 client=<client-name> | dir | "
          "storage=<storage-name> | all"),
+     true, true},
+    {NT_("setdevice"), SetdeviceCmd, _("Sets device parameter"),
+     NT_("storage=<storage-name> device=<device-name> autoselect=<on|off>"),
      true, true},
     {NT_("setip"), SetipCmd, _("Sets new client address -- if authorized"),
      NT_(""), false, true},
@@ -1587,6 +1593,36 @@ static bool SetdebugCmd(UaContext* ua, const char* cmd)
       break;
   }
 
+  return true;
+}
+
+/**
+ * setdevice storage=<storage-name> device=<device-name> autoselect=<on|off>
+ */
+static bool SetdeviceCmd(UaContext* ua, const char* cmd)
+{
+  std::map<std::string, std::string> arguments{
+      {"storage", ""}, {"device", ""}, {"autoselect", ""}};
+
+  for (int i = 1; i < ua->argc; i++) {
+    try {
+      auto& value = arguments.at(ua->argk[i]);
+      int idx = FindArgWithValue(ua, NT_(ua->argk[i]));
+      if (idx >= 0) {
+        value = ua->argv[idx];
+      }
+    }
+    catch (std::out_of_range& e) {
+      ua->ErrorMsg("Wrong argument: %s\n", ua->argk[i]);
+      return false;
+    }
+  }
+  for (const auto& arg : arguments) {
+    if (arg.second.empty()) { // value
+      ua->ErrorMsg("Argument missing: %s\n", arg.first.c_str());
+      return false;
+    }
+  }
   return true;
 }
 
