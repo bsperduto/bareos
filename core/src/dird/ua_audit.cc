@@ -39,6 +39,7 @@ namespace directordaemon {
  */
 bool UaContext::AuditEventWanted(bool audit_event_enabled)
 {
+  if (!me) { return false; }
   if (!me->audit_events) { return audit_event_enabled; }
 
   if (audit_event_enabled) {
