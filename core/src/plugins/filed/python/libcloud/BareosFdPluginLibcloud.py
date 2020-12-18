@@ -171,6 +171,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
         optional_options["misc"] = [
             "fail_on_download_error",
             "job_message_after_each_number_of_objects",
+            "ignore_on_download_error",
         ]
 
         # this maps config file options to libcloud options
@@ -233,6 +234,8 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                         self.options["job_message_after_each_number_of_objects"] = int(
                             value
                         )
+                    elif option == "ignore_on_download_error":
+                        self.options["ignore_on_download_error"] = strtobool(value)
                 except:
                     debugmessage(
                         100,
