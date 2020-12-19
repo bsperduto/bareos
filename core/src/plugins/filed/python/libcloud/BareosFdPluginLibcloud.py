@@ -488,7 +488,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                     ):
                         level = M_ERROR
                         ret = bRC_Skip
-                        if (self.current_backup_task["accurateOnly"] is True)
+                        if self.current_backup_task["accurateOnly"] is True:
                             self.current_backup_task["type"] = TASK_TYPE.COMPLETED
                             return bRC_OK
                         if self.options["fail_on_download_error"]:
