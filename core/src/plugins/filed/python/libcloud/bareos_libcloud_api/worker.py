@@ -127,7 +127,9 @@ class Worker(ProcessBase):
 
         action = CONTINUE
 
-        if task["size"] < 1024 * 10:
+        if task["accurateOnly"] is True:
+            action = self._put_stream_object_into_queue(task, obj)
+        elif task["size"] < 1024 * 10:
             action = self._download_object_into_queue(task, obj)
         elif task["size"] < self.options["prefetch_size"]:
             action = self._download_object_into_tempfile(task, obj)

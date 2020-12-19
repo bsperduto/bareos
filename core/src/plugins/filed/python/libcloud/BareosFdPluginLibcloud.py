@@ -306,6 +306,11 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
             jobmessage(M_INFO, "BareosLibcloudApi is shut down")
 
     def start_backup_file(self, savepkt):
+        if "type" in self.current_backup_task:
+            if self.current_backup_task["type"] <> TASK_TYPE.COMPLETED:
+                iop = bIOPS()
+                iop.type = IO_CLOSE
+                plugin_io(self, iop)
         error = False
         while self.active:
             worker_result = self.api.check_worker_messages()
@@ -483,6 +488,9 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                     ):
                         level = M_ERROR
                         ret = bRC_Skip
+                        if (self.current_backup_task["accurateOnly"] is True)
+                            self.current_backup_task["type"] = TASK_TYPE.COMPLETED
+                            return bRC_OK
                         if self.options["fail_on_download_error"]:
                             level = M_FATAL
                             ret = bRC_Error
@@ -497,8 +505,9 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                                 self.current_backup_task["size"],
                             ),
                         )
+                        self.current_backup_task["type"] = TASK_TYPE.COMPLETED
                         return ret
-
+            self.current_backup_task["type"] = TASK_TYPE.COMPLETED
             return bRC_OK
 
         return bRC_OK
