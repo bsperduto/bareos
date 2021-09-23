@@ -182,7 +182,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
         optional_options["misc"] = [
             "fail_on_download_error",
             "job_message_after_each_number_of_objects",
-			"ignore_on_download_error",
+            "ignore_on_download_error",
         ]
 
         # this maps config file options to libcloud options
@@ -245,7 +245,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                         self.options["job_message_after_each_number_of_objects"] = int(
                             value
                         )
-					elif option == "ignore_on_download_error":
+                    elif option == "ignore_on_download_error":
                         self.options["ignore_on_download_error"] = strtobool(value)
                 except:
                     debugmessage(
@@ -499,7 +499,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                     ):
                         level = M_ERROR
                         ret = bRC_Skip
-						if self.current_backup_task["accurateOnly"] is True:
+                        if self.current_backup_task["accurateOnly"] is True:
                             self.current_backup_task["type"] = TASK_TYPE.COMPLETED
                             return bRC_OK
                         if self.options["fail_on_download_error"]:
@@ -516,7 +516,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                                 self.current_backup_task["size"],
                             ),
                         )
-						self.current_backup_task["type"] = TASK_TYPE.COMPLETED
+                        self.current_backup_task["type"] = TASK_TYPE.COMPLETED
                         return ret
             self.current_backup_task["type"] = TASK_TYPE.COMPLETED
             return bRC_OK
