@@ -61,7 +61,7 @@ class Worker(ProcessBase):
             if "fail_on_download_error" in options
             else 0
         )
-		self.ignore_on_download_error = bool(
+        self.ignore_on_download_error = bool(
             options["ignore_on_download_error"]
             if "ignore_on_download_error" in options
             else 0
