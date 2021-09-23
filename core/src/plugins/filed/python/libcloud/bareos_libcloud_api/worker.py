@@ -61,6 +61,11 @@ class Worker(ProcessBase):
             if "fail_on_download_error" in options
             else 0
         )
+		self.ignore_on_download_error = bool(
+            options["ignore_on_download_error"]
+            if "ignore_on_download_error" in options
+            else 0
+        )
 
     def run_process(self):
         error = ""
@@ -98,11 +103,12 @@ class Worker(ProcessBase):
             obj = self.driver.get_object(task["bucket"], task["name"])
 
         except ObjectDoesNotExistError as e:
-            self.error_message(
-                "Could not get file object, skipping: %s"
-                % (task_object_full_name(task)),
-                e,
-            )
+            if not self.ignore_on_download_error:
+                self.error_message(
+                    "Could not get file object, skipping: %s"
+                    % (task_object_full_name(task)),
+                    e,
+                )
             return self._fail_job_or_continue_running()
         except requests.exceptions.ConnectionError as e:
             self.error_message(
@@ -121,7 +127,9 @@ class Worker(ProcessBase):
 
         action = CONTINUE
 
-        if task["size"] < 1024 * 10:
+        if task["accurateOnly"] is True:
+            action = self._put_stream_object_into_queue(task, obj)
+        elif task["size"] < 1024 * 10:
             action = self._download_object_into_queue(task, obj)
         elif task["size"] < self.options["prefetch_size"]:
             action = self._download_object_into_tempfile(task, obj)

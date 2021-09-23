@@ -182,6 +182,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
         optional_options["misc"] = [
             "fail_on_download_error",
             "job_message_after_each_number_of_objects",
+			"ignore_on_download_error",
         ]
 
         # this maps config file options to libcloud options
@@ -244,6 +245,8 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                         self.options["job_message_after_each_number_of_objects"] = int(
                             value
                         )
+					elif option == "ignore_on_download_error":
+                        self.options["ignore_on_download_error"] = strtobool(value)
                 except:
                     debugmessage(
                         100,
@@ -314,6 +317,11 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
             jobmessage(M_INFO, "BareosLibcloudApi is shut down")
 
     def start_backup_file(self, savepkt):
+        if "type" in self.current_backup_task:
+            if self.current_backup_task["type"] != TASK_TYPE.COMPLETED:
+                iop = IoPacket()
+                iop.func = IO_CLOSE
+                self.plugin_io(iop)
         error = False
         while self.active:
             worker_result = self.api.check_worker_messages()
@@ -491,6 +499,9 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                     ):
                         level = M_ERROR
                         ret = bRC_Skip
+						if self.current_backup_task["accurateOnly"] is True:
+                            self.current_backup_task["type"] = TASK_TYPE.COMPLETED
+                            return bRC_OK
                         if self.options["fail_on_download_error"]:
                             level = M_FATAL
                             ret = bRC_Error
@@ -505,8 +516,9 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
                                 self.current_backup_task["size"],
                             ),
                         )
+						self.current_backup_task["type"] = TASK_TYPE.COMPLETED
                         return ret
-
+            self.current_backup_task["type"] = TASK_TYPE.COMPLETED
             return bRC_OK
 
         return bRC_OK
