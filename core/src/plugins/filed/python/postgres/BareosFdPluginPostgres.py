@@ -84,6 +84,10 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
         self.row_rop_raw = None
         # Dictionary to store passed restore object data
         self.rop_data = {}
+        # Raw text to store tablespace map
+        self.tablespace_map_data = None
+        # Raw text to store backup label
+        self.backup_label_data = None
         # we need our timezone information for some timestamp comparisons
         # this one respects daylight saving timezones
         self.tzOffset = -(
@@ -366,10 +370,6 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
             return bareosfd.bRC_Error
 
         bareosfd.DebugMessage(150, "Start response: %s\n" % str(result))
-        bareosfd.DebugMessage(
-            150, "Adding label file %s to fileset\n" % self.labelFileName
-        )
-        self.files_to_backup.append(self.labelFileName)
         bareosfd.DebugMessage(150, "Filelist: %s\n" % (self.files_to_backup))
         self.PostgressFullBackupRunning = True
         return bareosfd.bRC_OK
@@ -397,7 +397,7 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
             return bareosfd.bRC_Skip
 
         # Plain files are handled by super class
-        if self.files_to_backup[-1] not in ["ROP"]:
+        if self.files_to_backup[-1] not in ["ROP", "tablespace_map", self.labelFileName]:
             return super(BareosFdPluginPostgres, self).start_backup_file(savepkt)
 
         # Here we create the restore object
@@ -413,6 +413,24 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
             bareosfd.DebugMessage(150, "fname: " + savepkt.fname + "\n")
             bareosfd.DebugMessage(150, "rop " + str(self.rop_data) + "\n")
             savepkt.object = bytearray(json.dumps(self.rop_data), "utf-8")
+            savepkt.object_len = len(savepkt.object)
+            savepkt.object_index = int(time.time())
+        elif self.file_to_backup == self.labelFileName:
+            savepkt.fname = "/" + self.labelFileName
+            savepkt.type = bareosfd.FT_RESTORE_FIRST
+            savepkt.object_name = savepkt.fname
+            bareosfd.DebugMessage(150, "fname: " + savepkt.fname + "\n")
+            bareosfd.DebugMessage(150, "label data " + self.backup_label_data + "\n")
+            savepkt.object = bytearray(self.backup_label_data, "utf-8")
+            savepkt.object_len = len(savepkt.object)
+            savepkt.object_index = int(time.time())
+        elif self.file_to_backup == "tablespace_map":
+            savepkt.fname = "/tablespace_map"
+            savepkt.type = bareosfd.FT_RESTORE_FIRST
+            savepkt.object_name = savepkt.fname
+            bareosfd.DebugMessage(150, "fname: " + savepkt.fname + "\n")
+            bareosfd.DebugMessage(150, "tablespace data " + self.tablespace_map_data + "\n")
+            savepkt.object = bytearray(self.tablespace_map_data, "utf-8")
             savepkt.object_len = len(savepkt.object)
             savepkt.object_index = int(time.time())
         else:
@@ -484,6 +502,19 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
                 stopStmt = "SELECT pg_stop_backup();"
             results = self.dbCon.run(stopStmt)
             self.lastLSN = self.formatLSN(results[0][0])
+
+            #Fill in tablespace map contents
+            self.backup_label_data = results[0][1]
+            bareosfd.DebugMessage(
+                150, "Adding label file %s to fileset\n" % self.labelFileName
+            )
+            self.files_to_backup.append(self.labelFileName)
+            self.tablespace_map_data = results[0][2]
+            bareosfd.DebugMessage(
+                150, "Adding tablespace map file %s to fileset\n" % "tablespace_map"
+            )
+            self.files_to_backup.append("tablespace_map")
+
             self.lastBackupStopTime = int(time.time())
             bareosfd.JobMessage(
                 bareosfd.M_INFO,
