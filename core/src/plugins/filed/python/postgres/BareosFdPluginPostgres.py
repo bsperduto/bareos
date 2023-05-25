@@ -351,8 +351,13 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
             tz=dateutil.tz.tzoffset(None, self.tzOffset)
         )
         try:
+            pgMajorVersion = self.pgVersion // 10000
+            if pgMajorVersion >= 15:
+                startStmt = "SELECT pg_backup_start"
+            else: 
+                startStmt = "SELECT pg_start_backup"
             result = self.dbCon.run(
-                "SELECT pg_start_backup('%s');" % self.backupLabelString
+                startStmt + "('%s');" % self.backupLabelString
             )
         except Exception as e:
             bareosfd.JobMessage(
@@ -472,7 +477,12 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
         # self.backupStartTime = self.dbCursor.fetchone()[0]
         # Tell Postgres we are done
         try:
-            results = self.dbCon.run("SELECT pg_stop_backup();")
+            pgMajorVersion = self.pgVersion // 10000
+            if pgMajorVersion >= 15:
+                stopStmt = "SELECT pg_backup_stop();"
+            else: 
+                stopStmt = "SELECT pg_stop_backup();"
+            results = self.dbCon.run(stopStmt)
             self.lastLSN = self.formatLSN(results[0][0])
             self.lastBackupStopTime = int(time.time())
             bareosfd.JobMessage(
