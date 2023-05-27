@@ -495,10 +495,14 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
         try:
             pgMajorVersion = self.pgVersion // 10000
             if pgMajorVersion >= 15:
-                stopStmt = "SELECT pg_backup_stop();"
+                stopStmt = "SELECT * from pg_backup_stop(wait_for_archive => true);"
             else: 
                 stopStmt = "SELECT pg_stop_backup();"
+            
             results = self.dbCon.run(stopStmt)
+            bareosfd.DebugMessage(
+                150, "Result from pg_stop_backup %s\n" % results
+            )
             self.lastLSN = self.formatLSN(results[0][0])
 
             #Fill in tablespace map contents
