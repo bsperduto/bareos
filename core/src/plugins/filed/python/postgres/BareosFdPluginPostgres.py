@@ -512,10 +512,11 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
             )
             self.files_to_backup.append(self.labelFileName)
             self.tablespace_map_data = results[0][2]
-            bareosfd.DebugMessage(
-                150, "Adding tablespace map file %s to fileset\n" % "tablespace_map"
-            )
-            if not self.tablespace_map_data:
+            
+            if len(self.tablespace_map_data) > 0:
+                bareosfd.DebugMessage(
+                    150, "Adding tablespace map file %s to fileset\n" % "tablespace_map"
+                )
                 self.files_to_backup.append("tablespace_map")
 
             self.parseBackupLabelFile()
