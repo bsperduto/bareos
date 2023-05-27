@@ -376,15 +376,14 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
 
     def parseBackupLabelFile(self):
         try:
-            with open(self.labelFileName, "r") as labelFile:
-                for labelItem in labelFile.read().splitlines():
-                    k, v = labelItem.split(":", 1)
-                    self.labelItems.update({k.strip(): v.strip()})
+            for labelItem in self.backup_label_data.splitlines():
+                k, v = labelItem.split(":", 1)
+                self.labelItems.update({k.strip(): v.strip()})
             bareosfd.DebugMessage(150, "Labels read: %s\n" % str(self.labelItems))
         except Exception as e:
             bareosfd.JobMessage(
                 bareosfd.M_ERROR,
-                "Could not read Label File %s: %s\n" % (self.labelFileName, e),
+                "Could not read Label Data %s: %s\n" % (self.labelFileName, e),
             )
 
     def start_backup_file(self, savepkt):
@@ -490,7 +489,6 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
         """
         # TODO Error Handling
         # Get Backup Start Date
-        self.parseBackupLabelFile()
         # self.execute_SQL("SELECT pg_backup_start_time()")
         # self.backupStartTime = self.dbCursor.fetchone()[0]
         # Tell Postgres we are done
@@ -514,6 +512,8 @@ class BareosFdPluginPostgres(BareosFdPluginLocalFilesBaseclass):  # noqa
                 150, "Adding tablespace map file %s to fileset\n" % "tablespace_map"
             )
             self.files_to_backup.append("tablespace_map")
+
+            self.parseBackupLabelFile()
 
             self.lastBackupStopTime = int(time.time())
             bareosfd.JobMessage(
