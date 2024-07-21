@@ -315,8 +315,8 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
 
     def start_backup_file(self, savepkt):
         if "type" in self.current_backup_task:
-            iop = bIOPS()
-            iop.type = IO_CLOSE
+            iop = bareosfd.IoPacket()
+            iop.func = IO_CLOSE
             plugin_io(self, iop)
         error = False
         while self.active:
