@@ -317,7 +317,7 @@ class BareosFdPluginLibcloud(BareosFdPluginBaseclass.BareosFdPluginBaseclass):
         if "type" in self.current_backup_task:
             iop = bareosfd.IoPacket()
             iop.func = IO_CLOSE
-            plugin_io(self, iop)
+            self.plugin_io(self, iop)
         error = False
         while self.active:
             worker_result = self.api.check_worker_messages()
