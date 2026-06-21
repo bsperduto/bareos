@@ -2114,7 +2114,6 @@ If you want to migrate from your manually configured disk autochanger to simply 
 [PR #2128]: https://github.com/bareos/bareos/pull/2128
 [PR #2130]: https://github.com/bareos/bareos/pull/2130
 [PR #2132]: https://github.com/bareos/bareos/pull/2132
-[PR #2141]: https://github.com/bareos/bareos/pull/2141
 [PR #2144]: https://github.com/bareos/bareos/pull/2144
 [PR #2147]: https://github.com/bareos/bareos/pull/2147
 [PR #2149]: https://github.com/bareos/bareos/pull/2149
